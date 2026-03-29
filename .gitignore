@@ -1,0 +1,86 @@
+# -----------------------------
+# Dependencies
+# -----------------------------
+node_modules/
+
+# -----------------------------
+# Build outputs
+# -----------------------------
+dist/
+build/
+web-build/
+coverage/
+
+# -----------------------------
+# Expo / React Native
+# -----------------------------
+.expo/
+.expo-shared/
+expo-env.d.ts
+.metro-health-check*
+
+# Generated native folders (Expo prebuild)
+/ios/
+/android/
+
+# -----------------------------
+# Logs
+# -----------------------------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# -----------------------------
+# Environment files
+# -----------------------------
+.env
+.env.*
+!.env.example
+
+# -----------------------------
+# TypeScript
+# -----------------------------
+*.tsbuildinfo
+
+# -----------------------------
+# Native / signing / secrets
+# -----------------------------
+.kotlin/
+*.orig.*
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# -----------------------------
+# IDE / Editor
+# -----------------------------
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# AI assistants / agent tooling (local)
+.claude/
+.agents/
+.cursor/
+.windsurf/
+.roo/
+.continue/
+.copilot/
+
+# -----------------------------
+# OS files
+# -----------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# -----------------------------
+# Misc
+# -----------------------------
+app-example
