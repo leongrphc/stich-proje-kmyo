@@ -28,9 +28,15 @@ function RootNavigator() {
   useEffect(() => {
     if (!user) return;
 
-    registerForPushNotifications().then((token) => {
-      if (token) savePushToken(user.id, token);
-    });
+    // Yönlendirme animasyonlarının bitmesi için kısa bir gecikme ekliyoruz.
+    // Aksi takdirde Android'de sayfa geçişi sırasında izin penceresi açılırsa uygulama çökebilir.
+    const timer = setTimeout(() => {
+      registerForPushNotifications().then((token) => {
+        if (token) savePushToken(user.id, token);
+      });
+    }, 1500);
+
+    return () => clearTimeout(timer);
   }, [user]);
 
   // Bildirime tıklanınca yönlendirme
