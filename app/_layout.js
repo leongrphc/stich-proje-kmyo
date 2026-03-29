@@ -24,20 +24,7 @@ function RootNavigator() {
   const router = useRouter();
   const notificationResponseListener = useRef(null);
 
-  // Push token kaydı
-  useEffect(() => {
-    if (!user) return;
-
-    // Yönlendirme animasyonlarının bitmesi için kısa bir gecikme ekliyoruz.
-    // Aksi takdirde Android'de sayfa geçişi sırasında izin penceresi açılırsa uygulama çökebilir.
-    const timer = setTimeout(() => {
-      registerForPushNotifications().then((token) => {
-        if (token) savePushToken(user.id, token);
-      });
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, [user]);
+  // Push token kaydı (Otomatik istemeyi kaldırdık)
 
   // Bildirime tıklanınca yönlendirme
   useEffect(() => {

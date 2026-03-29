@@ -26,7 +26,7 @@ import { supabase } from "../../lib/supabase";
 import { RADIUS, SPACING, TEMA_MODLARI } from "../../lib/theme";
 import { decode } from "base64-arraybuffer";
 import * as FileSystem from "expo-file-system/legacy";
-import { removePushToken } from "../../lib/pushNotifications";
+import { removePushToken, registerForPushNotifications, savePushToken } from "../../lib/pushNotifications";
 
 export default function ProfilScreen() {
   const { user, profile, role, fullName, logout, updateProfileDetails, updateAvatarUrl } = useAuth();
@@ -238,6 +238,20 @@ export default function ProfilScreen() {
     }
   };
 
+  const handlePushPermission = async () => {
+    try {
+      const token = await registerForPushNotifications();
+      if (token) {
+        await savePushToken(user.id, token);
+        Alert.alert("Başarılı", "Bildirim izni başarıyla verildi. Cihazınız sisteme kaydedildi.");
+      } else {
+        Alert.alert("Bilgi", "Bildirimleri alabilmek için cihaz ayarlarından da izin vermeniz gerekebilir.");
+      }
+    } catch (e) {
+      hataYonet(e, "Bildirim Kaydı");
+    }
+  };
+
   const menuSections = [
     {
       title: "GENEL",
@@ -264,6 +278,12 @@ export default function ProfilScreen() {
           icon: "notifications-outline",
           label: "Bildirimler",
           onPress: () => router.push("/(tabs)/bildirimler"),
+        },
+        {
+          icon: "notifications-circle-outline",
+          label: "Bildirim İzni Ver",
+          value: "Sisteme Cihazı Kaydet",
+          onPress: handlePushPermission,
         },
       ],
     },
