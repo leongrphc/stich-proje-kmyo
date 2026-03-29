@@ -16,5 +16,5 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/ubuntu/proje-kmyo-teknik-servis
+            cd /home/ubuntu/stich-proje-kmyo
             git pull origin master
