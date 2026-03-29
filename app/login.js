@@ -1,10 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  InteractionManager,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -22,10 +24,33 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (loginSuccess && user) {
+      const task = InteractionManager.runAfterInteractions(() => {
+        if (isMounted.current) {
+          try {
+            router.replace("/(tabs)");
+          } catch (_) {}
+        }
+      });
+      return () => task.cancel();
+    }
+  }, [loginSuccess, user]);
 
   const handleLogin = async () => {
+    Keyboard.dismiss();
+
     if (!email.trim() || !password.trim()) {
       Alert.alert("Hata", "Lütfen e-posta ve şifrenizi giriniz.");
       return;
@@ -34,11 +59,12 @@ export default function LoginScreen() {
     setSubmitting(true);
     try {
       await login(email.trim(), password);
-      router.replace("/(tabs)");
+      setLoginSuccess(true);
     } catch (error) {
-      Alert.alert("Giriş Başarısız", error.message);
-    } finally {
-      setSubmitting(false);
+      if (isMounted.current) {
+        setSubmitting(false);
+        Alert.alert("Giriş Başarısız", error.message);
+      }
     }
   };
 

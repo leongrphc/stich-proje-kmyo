@@ -12,8 +12,12 @@ export default function TabLayout() {
   const [okunmamisSayisi, setOkunmamisSayisi] = useState(0);
 
   const bildirimSayisiniGuncelle = async () => {
-    const sayi = await okunmamisSayisiGetir();
-    setOkunmamisSayisi(sayi);
+    try {
+      const sayi = await okunmamisSayisiGetir();
+      setOkunmamisSayisi(sayi);
+    } catch {
+      // Bildirim sayisi alinamadi
+    }
   };
 
   useFocusEffect(

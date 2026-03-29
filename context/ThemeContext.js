@@ -34,11 +34,15 @@ export function ThemeProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (!profile?.tema) return;
+    try {
+      if (!profile?.tema) return;
 
-    if (profile.tema === TEMA_MODLARI.dark || profile.tema === TEMA_MODLARI.light) {
-      setThemeMode(profile.tema);
-      AsyncStorage.setItem(TEMA_STORAGE_KEY, profile.tema).catch(() => null);
+      if (profile.tema === TEMA_MODLARI.dark || profile.tema === TEMA_MODLARI.light) {
+        setThemeMode(profile.tema);
+        AsyncStorage.setItem(TEMA_STORAGE_KEY, profile.tema).catch(() => null);
+      }
+    } catch {
+      // Tema guncellenemedi, mevcut tema ile devam et
     }
   }, [profile?.tema]);
 

@@ -1,12 +1,6 @@
-import * as Notifications from "expo-notifications";
-import { Stack, useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
-import { AuthProvider, useAuth } from "../context/AuthContext";
+import { Stack } from "expo-router";
+import { AuthProvider } from "../context/AuthContext";
 import { ThemeProvider, useAppTheme } from "../context/ThemeContext";
-import {
-  registerForPushNotifications,
-  savePushToken,
-} from "../lib/pushNotifications";
 
 export default function RootLayout() {
   return (
@@ -20,28 +14,6 @@ export default function RootLayout() {
 
 function RootNavigator() {
   const { colors } = useAppTheme();
-  const { user } = useAuth();
-  const router = useRouter();
-  const notificationResponseListener = useRef(null);
-
-  // Push token kaydı (Otomatik istemeyi kaldırdık)
-
-  // Bildirime tıklanınca yönlendirme
-  useEffect(() => {
-    notificationResponseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        const data = response.notification.request.content.data;
-        if (data?.talepId) {
-          router.push({ pathname: "/talep-detay", params: { id: data.talepId } });
-        }
-      });
-
-    return () => {
-      if (notificationResponseListener.current) {
-        Notifications.removeNotificationSubscription(notificationResponseListener.current);
-      }
-    };
-  }, [router]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

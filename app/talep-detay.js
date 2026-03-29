@@ -892,7 +892,7 @@ export default function TalepDetayScreen() {
         setYeniYorum={setYeniYorum}
         onGonder={handleYorumGonder}
         scrollRef={scrollRef}
-        canVoiceRecord={isStaff}
+        canVoiceRecord={true}
         kayitYapiliyor={kayitYapiliyor}
         sesYukleniyor={sesYukleniyor}
         onSesKaydiBaslat={handleSesKaydiBaslat}

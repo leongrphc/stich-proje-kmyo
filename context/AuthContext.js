@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 const AuthContext = createContext();
@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
+  const loginInProgressRef = useRef(false);
 
   const fetchProfile = useCallback(async (userId) => {
     try {
@@ -28,14 +29,20 @@ export function AuthProvider({ children }) {
   }, []);
 
   const setupUser = useCallback(async (sessionUser) => {
-    setUser(sessionUser);
-    const p = await fetchProfile(sessionUser.id);
-    if (p) {
-      setProfile(p);
-      setRole(p.rol);
-    } else {
+    try {
+      setUser(sessionUser);
+      const p = await fetchProfile(sessionUser.id);
+      if (p) {
+        setProfile(p);
+        setRole(p.rol);
+      } else {
+        setProfile(null);
+        setRole(sessionUser.user_metadata?.rol || "kullanici");
+      }
+    } catch (err) {
+      console.error("setupUser hatasi:", err);
       setProfile(null);
-      setRole(sessionUser.user_metadata?.rol || "kullanici");
+      setRole(sessionUser?.user_metadata?.rol || "kullanici");
     }
   }, [fetchProfile]);
 
@@ -67,13 +74,21 @@ export function AuthProvider({ children }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!isMounted) return;
-      if (session?.user) {
-        await setupUser(session.user);
-      } else {
-        setUser(null);
-        setProfile(null);
-        setRole(null);
+
+      try {
+        if (session?.user) {
+          if (!loginInProgressRef.current) {
+            await setupUser(session.user);
+          }
+        } else {
+          setUser(null);
+          setProfile(null);
+          setRole(null);
+        }
+      } catch (err) {
+        console.error("onAuthStateChange hatasi:", err);
       }
+
       if (loading) setLoading(false);
     });
 
@@ -84,12 +99,22 @@ export function AuthProvider({ children }) {
   }, [setupUser]);
 
   const login = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw error;
-    return data;
+    loginInProgressRef.current = true;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+
+      if (data?.user) {
+        await setupUser(data.user);
+      }
+
+      return data;
+    } finally {
+      loginInProgressRef.current = false;
+    }
   };
 
   const register = async (ad, soyad, email, password) => {
@@ -171,7 +196,6 @@ export function AuthProvider({ children }) {
   const isKullanici = role === "kullanici";
   const isStaff = role === "yonetici" || role === "teknisyen";
 
-  // Kullanicinin tam adini dondur
   const fullName = profile
     ? `${profile.ad || ""} ${profile.soyad || ""}`.trim()
     : user?.user_metadata?.ad || "Kullanici";

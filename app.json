@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "proje-kmyo-teknik-servis",
-    "slug": "proje-kmyo-teknik-servis",
+    "name": "proje-kmyo-teknik-servis-final",
+    "slug": "proje-kmyo-teknik-servis-final",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -12,13 +12,17 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.kmyo.teknikservis",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/icon.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.mozkandev.projekmyoteknikservis"
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "output": "single",
@@ -43,13 +47,6 @@
             "backgroundColor": "#000000"
           }
         }
-      ],
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/icon.png",
-          "color": "#00236f"
-        }
       ]
     ],
     "experiments": {
@@ -61,7 +58,6 @@
       "eas": {
         "projectId": "7cf92b2d-dceb-4609-b65b-1e4b197af9a9"
       }
-    },
-    "owner": "mozkandev"
+    }
   }
 }
