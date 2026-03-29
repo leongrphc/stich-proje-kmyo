@@ -159,7 +159,7 @@ export default function HomeScreen() {
             <Text style={styles.welcomeTitle}>Hoş Geldiniz, {fullName?.split(" ")[0] || "Kullanıcı"}</Text>
        
           </View>
-          <Text style={styles.welcomeSub}>Bugün {aktifSayisi} aktif iş emriniz var.</Text>
+          <Text style={styles.welcomeSub}>Bugün {aktifSayisi} aktif tamir talebiniz var.</Text>
           
         </View>
              <View style={[
