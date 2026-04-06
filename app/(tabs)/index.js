@@ -31,6 +31,8 @@ export default function HomeScreen() {
   const [sonTalepler, setSonTalepler] = useState([]);
 
   const fetchVeriler = useCallback(async () => {
+    if (role === null) return;
+
     try {
       const { data, error } = await supabase
         .from("talepler")
@@ -73,7 +75,7 @@ export default function HomeScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [isTeknisyen, isYonetici]);
+  }, [role, isTeknisyen, isYonetici]);
 
   useFocusEffect(
     useCallback(() => {
@@ -115,6 +117,14 @@ export default function HomeScreen() {
   }, [fetchVeriler]);
 
   const aktifSayisi = ozet.toplam || 0;
+
+  if (loading || role === null) {
+    return (
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
