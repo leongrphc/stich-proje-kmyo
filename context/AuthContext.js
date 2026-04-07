@@ -11,19 +11,27 @@ export function AuthProvider({ children }) {
   const loginInProgressRef = useRef(false);
 
   const fetchProfile = useCallback(async (userId) => {
+    const PROFILE_TIMEOUT_MS = 5000;
     try {
-      const { data, error } = await supabase
+      const fetchPromise = supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("fetchProfile timeout")), PROFILE_TIMEOUT_MS)
+      );
+
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
 
       if (error) {
         console.error("Profil yuklenemedi:", error.message);
         return null;
       }
       return data;
-    } catch {
+    } catch (err) {
+      console.warn("Profil alinamadi:", err.message);
       return null;
     }
   }, []);
@@ -48,8 +56,16 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let isMounted = true;
+    let loadingCleared = false;
 
-    const SESSION_TIMEOUT_MS = 8000;
+    const clearLoading = () => {
+      if (isMounted && !loadingCleared) {
+        loadingCleared = true;
+        setLoading(false);
+      }
+    };
+
+    const SESSION_TIMEOUT_MS = 5000;
 
     const sessionPromise = supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!isMounted) return;
@@ -67,7 +83,7 @@ export function AuthProvider({ children }) {
         console.warn("Auth oturumu alinamadi, devam ediliyor:", err.message);
       })
       .finally(() => {
-        if (isMounted) setLoading(false);
+        clearLoading();
       });
 
     const {
@@ -87,9 +103,9 @@ export function AuthProvider({ children }) {
         }
       } catch (err) {
         console.error("onAuthStateChange hatasi:", err);
+      } finally {
+        clearLoading();
       }
-
-      if (loading) setLoading(false);
     });
 
     return () => {
