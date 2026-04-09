@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
@@ -27,7 +27,10 @@ export default function YeniTalepScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { colors, shadows, isDark } = useAppTheme();
-  const styles = useMemo(() => getStyles(colors, shadows, isDark), [colors, shadows, isDark]);
+  const styles = useMemo(
+    () => getStyles(colors, shadows, isDark),
+    [colors, shadows, isDark],
+  );
   const [submitting, setSubmitting] = useState(false);
   const [baslik, setBaslik] = useState("");
   const [aciklama, setAciklama] = useState("");
@@ -50,10 +53,14 @@ export default function YeniTalepScreen() {
 
   const oncelikRengi = (o) => {
     switch (o) {
-      case "Düşük": return colors.success;
-      case "Orta": return colors.warning;
-      case "Yüksek": return colors.danger;
-      default: return colors.outline;
+      case "Düşük":
+        return colors.success;
+      case "Orta":
+        return colors.warning;
+      case "Yüksek":
+        return colors.danger;
+      default:
+        return colors.outline;
     }
   };
 
@@ -77,7 +84,8 @@ export default function YeniTalepScreen() {
         quality: 0.7,
       });
     } else {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         Alert.alert("İzin Gerekli", "Galeri izni gereklidir.");
         return;
@@ -138,7 +146,9 @@ export default function YeniTalepScreen() {
         const urls = [];
         for (const f of fotolar) {
           try {
-            const arraybuffer = await fetch(f.uri).then((res) => res.arrayBuffer());
+            const arraybuffer = await fetch(f.uri).then((res) =>
+              res.arrayBuffer(),
+            );
             const fileExt = f.uri.split(".").pop() || "jpg";
             const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${fileExt}`;
 
@@ -183,7 +193,8 @@ export default function YeniTalepScreen() {
 
       if (error) throw error;
 
-      const kullaniciAd = `${user.user_metadata?.ad || ""} ${user.user_metadata?.soyad || ""}`.trim();
+      const kullaniciAd =
+        `${user.user_metadata?.ad || ""} ${user.user_metadata?.soyad || ""}`.trim();
       await yoneticilereBildirim({
         gonderenId: user.id,
         gonderenAd: kullaniciAd || user.email,
@@ -224,17 +235,6 @@ export default function YeniTalepScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Step Indicator */}
-        <View style={styles.stepRow}>
-          <View style={styles.stepActive}>
-            <Text style={styles.stepActiveText}>ADIM 1: VERİ GİRİŞİ</Text>
-          </View>
-          <View style={styles.stepLine} />
-          <View style={styles.stepInactive}>
-            <Text style={styles.stepInactiveText}>ADIM 2: ONAY</Text>
-          </View>
-        </View>
-
         {/* Başlık */}
         <SectionHeading title="Talep Bilgileri" color={colors.primary} />
         <View style={styles.formCard}>
@@ -253,7 +253,7 @@ export default function YeniTalepScreen() {
             <Text style={styles.inputLabel}>KONUM</Text>
             <TextInput
               style={styles.input}
-              placeholder="Ör: A Blok - Kat 3 - Oda 301"
+              placeholder="Ör: İstanbul / Kadıköy Ofis - 3. Kat No: 305"
               placeholderTextColor={colors.outlineVariant}
               value={konum}
               onChangeText={setKonum}
@@ -276,7 +276,10 @@ export default function YeniTalepScreen() {
         </View>
 
         {/* Kategori */}
-        <SectionHeading title="Kategori" color={colors.tertiaryColor || colors.primary} />
+        <SectionHeading
+          title="Kategori"
+          color={colors.tertiaryColor || colors.primary}
+        />
         <View style={styles.formCard}>
           <View style={styles.chipGrid}>
             {kategoriler.map((k) => (
@@ -286,7 +289,12 @@ export default function YeniTalepScreen() {
                 onPress={() => setKategori(k)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.chipText, kategori === k && styles.chipTextActive]}>
+                <Text
+                  style={[
+                    styles.chipText,
+                    kategori === k && styles.chipTextActive,
+                  ]}
+                >
                   {k}
                 </Text>
               </TouchableOpacity>
@@ -305,7 +313,8 @@ export default function YeniTalepScreen() {
                   styles.priorityBtn,
                   {
                     borderColor: oncelikRengi(o),
-                    backgroundColor: oncelik === o ? oncelikRengi(o) : "transparent",
+                    backgroundColor:
+                      oncelik === o ? oncelikRengi(o) : "transparent",
                   },
                 ]}
                 onPress={() => setOncelik(o)}
@@ -325,8 +334,16 @@ export default function YeniTalepScreen() {
         </View>
 
         {/* Fotoğraf */}
-        <SectionHeading title={`Cihaz Görselleri (${fotolar.length}/${MAX_FOTO})`} color={colors.outline} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll} contentContainerStyle={styles.photoSection}>
+        <SectionHeading
+          title={`Cihaz Görselleri (${fotolar.length}/${MAX_FOTO})`}
+          color={colors.outline}
+        />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.photoScroll}
+          contentContainerStyle={styles.photoSection}
+        >
           {fotolar.map((f, i) => (
             <View key={i} style={styles.photoPreviewWrap}>
               <Image source={{ uri: f.uri }} style={styles.photoPreview} />
@@ -343,9 +360,17 @@ export default function YeniTalepScreen() {
             </View>
           ))}
           {fotolar.length < MAX_FOTO && (
-            <TouchableOpacity style={styles.photoAddBtn} onPress={fotografEkle} activeOpacity={0.7}>
-              <Ionicons name="camera-outline" size={28} color={colors.outline} />
-              <Text style={styles.photoAddText}>FOTO EKLE</Text>
+            <TouchableOpacity
+              style={styles.photoAddBtn}
+              onPress={fotografEkle}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="camera-outline"
+                size={28}
+                color={colors.outline}
+              />
+              <Text style={styles.photoAddText}>RESİM EKLE</Text>
             </TouchableOpacity>
           )}
         </ScrollView>
@@ -368,7 +393,9 @@ export default function YeniTalepScreen() {
             ) : (
               <>
                 <Ionicons name="save-outline" size={20} color="#fff" />
-                <Text style={styles.submitBtnText}>Kaydet ve Başlat</Text>
+                <Text style={styles.submitBtnText}>
+                  Talebi Kaydet ve Gönder
+                </Text>
               </>
             )}
           </LinearGradient>
@@ -393,7 +420,9 @@ function SectionHeading({ title, color }) {
   return (
     <View style={sectionStyles.wrap}>
       <View style={[sectionStyles.accent, { backgroundColor: color }]} />
-      <Text style={[sectionStyles.text, { color: color || colors.primary }]}>{title}</Text>
+      <Text style={[sectionStyles.text, { color: color || colors.primary }]}>
+        {title}
+      </Text>
     </View>
   );
 }

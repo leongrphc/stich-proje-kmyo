@@ -66,10 +66,15 @@ export default function BildirimlerScreen() {
   const handleBildirimTikla = async (bildirim) => {
     if (!bildirim.okundu) {
       await okunduIsaretle(bildirim.id);
-      setBildirimler((prev) => prev.map((b) => (b.id === bildirim.id ? { ...b, okundu: true } : b)));
+      setBildirimler((prev) =>
+        prev.map((b) => (b.id === bildirim.id ? { ...b, okundu: true } : b)),
+      );
     }
     if (bildirim.talep_id) {
-      router.push({ pathname: "/talep-detay", params: { id: bildirim.talep_id } });
+      router.push({
+        pathname: "/talep-detay",
+        params: { id: bildirim.talep_id },
+      });
     }
   };
 
@@ -93,24 +98,53 @@ export default function BildirimlerScreen() {
     if (farkDk < 60) return `${farkDk} dk önce`;
     if (farkSaat < 24) return `${farkSaat} saat önce`;
     if (farkGun < 7) return `${farkGun} gün önce`;
-    return t.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
+    return t.toLocaleDateString("tr-TR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
   };
 
   const renderBildirim = ({ item }) => {
     const config = turConfig[item.tur] || turConfig.bilgi;
     return (
-      <TouchableOpacity onPress={() => handleBildirimTikla(item)} activeOpacity={0.6}>
-        <GradientCard style={[styles.bildirimRow, !item.okundu && styles.okunmamisCard]} variant={item.okundu ? "default" : "cool"}>
-          <View style={[styles.iconCircle, { backgroundColor: `${config.color}14` }]}>
+      <TouchableOpacity
+        onPress={() => handleBildirimTikla(item)}
+        activeOpacity={0.6}
+      >
+        <GradientCard
+          style={[styles.bildirimRow, !item.okundu && styles.okunmamisCard]}
+          variant={item.okundu ? "default" : "cool"}
+        >
+          <View
+            style={[
+              styles.iconCircle,
+              { backgroundColor: `${config.color}14` },
+            ]}
+          >
             <Ionicons name={config.icon} size={22} color={config.color} />
           </View>
           <View style={styles.bildirimContent}>
             <View style={styles.bildirimHeaderRow}>
-              <Text style={[styles.bildirimBaslik, !item.okundu && styles.okunmamisBaslik]} numberOfLines={1}>{item.baslik}</Text>
-              <Text style={styles.zamanText}>{zamanFormat(item.created_at)}</Text>
+              <Text
+                style={[
+                  styles.bildirimBaslik,
+                  !item.okundu && styles.okunmamisBaslik,
+                ]}
+                numberOfLines={1}
+              >
+                {item.baslik}
+              </Text>
+              <Text style={styles.zamanText}>
+                {zamanFormat(item.created_at)}
+              </Text>
             </View>
-            <Text style={styles.bildirimMesaj} numberOfLines={2}>{item.mesaj}</Text>
-            {item.gonderen_ad ? <Text style={styles.gonderenText}>{item.gonderen_ad}</Text> : null}
+            <Text style={styles.bildirimMesaj} numberOfLines={2}>
+              {item.mesaj}
+            </Text>
+            {item.gonderen_ad ? (
+              <Text style={styles.gonderenText}>{item.gonderen_ad}</Text>
+            ) : null}
           </View>
           {!item.okundu ? <View style={styles.okunmamisDot} /> : null}
         </GradientCard>
@@ -121,7 +155,11 @@ export default function BildirimlerScreen() {
   return (
     <View style={styles.container}>
       {okunmamisVar && (
-        <TouchableOpacity style={styles.tumunuOkunduBtn} onPress={handleTumunuOkundu} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.tumunuOkunduBtn}
+          onPress={handleTumunuOkundu}
+          activeOpacity={0.7}
+        >
           <Ionicons name="checkmark-done" size={18} color={colors.primary} />
           <Text style={styles.tumunuOkunduText}>Tümünü okundu yap</Text>
         </TouchableOpacity>
@@ -138,10 +176,20 @@ export default function BildirimlerScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+            />
+          }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="notifications-off-outline" size={48} color={colors.textPlaceholder} />
+              <Ionicons
+                name="notifications-off-outline"
+                size={48}
+                color={colors.textPlaceholder}
+              />
               <Text style={styles.emptyText}>Henüz bildirim yok</Text>
             </View>
           }
@@ -153,13 +201,17 @@ export default function BildirimlerScreen() {
 
 const getStyles = (colors) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.surface || colors.background },
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface || colors.background,
+    },
     tumunuOkunduBtn: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
       paddingVertical: SPACING.md,
-      backgroundColor: colors.surfaceContainerLowest || colors.secondaryBackground,
+      backgroundColor:
+        colors.surfaceContainerLowest || colors.secondaryBackground,
       gap: SPACING.sm,
     },
     tumunuOkunduText: {

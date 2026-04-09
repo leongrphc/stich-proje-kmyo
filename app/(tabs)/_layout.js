@@ -25,7 +25,7 @@ export default function TabLayout() {
       bildirimSayisiniGuncelle();
       const interval = setInterval(bildirimSayisiniGuncelle, 30000);
       return () => clearInterval(interval);
-    }, [])
+    }, []),
   );
 
   return (
@@ -89,7 +89,11 @@ export default function TabLayout() {
           title: "Panel",
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "grid" : "grid-outline"} size={22} color={color} />
+            <Ionicons
+              name={focused ? "grid" : "grid-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -99,18 +103,26 @@ export default function TabLayout() {
           title: "Talepler",
           headerTitle: "TEKNİK SERVİS",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "document-text" : "document-text-outline"} size={22} color={color} />
+            <Ionicons
+              name={focused ? "document-text" : "document-text-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="yeni-talep"
         options={{
-          title: "Yeni Kayıt",
-          headerTitle: "Yeni Kayıt",
+          title: "Yeni Talep",
+          headerTitle: "Yeni Talep",
           href: isStaff ? null : "/(tabs)/yeni-talep",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "add-circle" : "add-circle-outline"} size={26} color={color} />
+            <Ionicons
+              name={focused ? "add-circle" : "add-circle-outline"}
+              size={26}
+              color={color}
+            />
           ),
         }}
       />
@@ -119,7 +131,11 @@ export default function TabLayout() {
         options={{
           title: "Bildirimler",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "notifications" : "notifications-outline"} size={22} color={color} />
+            <Ionicons
+              name={focused ? "notifications" : "notifications-outline"}
+              size={22}
+              color={color}
+            />
           ),
           tabBarBadge: okunmamisSayisi > 0 ? okunmamisSayisi : undefined,
           tabBarBadgeStyle: {
@@ -139,7 +155,11 @@ export default function TabLayout() {
           title: "Profil",
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "person" : "person-outline"} size={22} color={color} />
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -149,7 +169,11 @@ export default function TabLayout() {
           title: "Yönetim",
           href: isYonetici ? "/(tabs)/admin" : null,
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "shield-checkmark" : "shield-checkmark-outline"} size={22} color={color} />
+            <Ionicons
+              name={focused ? "shield-checkmark" : "shield-checkmark-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
