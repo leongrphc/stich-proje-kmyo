@@ -23,6 +23,8 @@ import { hataYonet } from "../../lib/errorHandler";
 import { supabase } from "../../lib/supabase";
 import { RADIUS, SPACING } from "../../lib/theme";
 
+const TOPLAM_ADIM = 3;
+
 export default function YeniTalepScreen() {
   const router = useRouter();
   const { user } = useAuth();
@@ -32,6 +34,7 @@ export default function YeniTalepScreen() {
     [colors, shadows, isDark],
   );
   const [submitting, setSubmitting] = useState(false);
+  const [adim, setAdim] = useState(1);
   const [baslik, setBaslik] = useState("");
   const [aciklama, setAciklama] = useState("");
   const [konum, setKonum] = useState("");
@@ -117,28 +120,57 @@ export default function YeniTalepScreen() {
     ]);
   };
 
-  const handleSubmit = async () => {
-    if (!baslik.trim()) {
-      Alert.alert("Hata", "Lütfen talep başlığını giriniz.");
-      return;
+  // Adım validasyonu
+  const adimGecerliMi = (step) => {
+    switch (step) {
+      case 1:
+        return baslik.trim() && aciklama.trim() && konum.trim();
+      case 2:
+        return kategori && oncelik;
+      case 3:
+        return true;
+      default:
+        return false;
     }
-    if (!aciklama.trim()) {
-      Alert.alert("Hata", "Lütfen açıklama giriniz.");
-      return;
-    }
-    if (!konum.trim()) {
-      Alert.alert("Hata", "Lütfen konum giriniz.");
-      return;
-    }
-    if (!kategori) {
-      Alert.alert("Hata", "Lütfen kategori seçiniz.");
-      return;
-    }
-    if (!oncelik) {
-      Alert.alert("Hata", "Lütfen öncelik seçiniz.");
-      return;
-    }
+  };
 
+  const ileriGit = () => {
+    if (adim === 1) {
+      if (!baslik.trim()) {
+        Alert.alert("Hata", "Lütfen talep başlığını giriniz.");
+        return;
+      }
+      if (!aciklama.trim()) {
+        Alert.alert("Hata", "Lütfen açıklama giriniz.");
+        return;
+      }
+      if (!konum.trim()) {
+        Alert.alert("Hata", "Lütfen konum giriniz.");
+        return;
+      }
+    }
+    if (adim === 2) {
+      if (!kategori) {
+        Alert.alert("Hata", "Lütfen kategori seçiniz.");
+        return;
+      }
+      if (!oncelik) {
+        Alert.alert("Hata", "Lütfen öncelik seçiniz.");
+        return;
+      }
+    }
+    if (adim < TOPLAM_ADIM) {
+      setAdim(adim + 1);
+    }
+  };
+
+  const geriGit = () => {
+    if (adim > 1) {
+      setAdim(adim - 1);
+    }
+  };
+
+  const handleSubmit = async () => {
     setSubmitting(true);
     try {
       let fotoUrl = null;
@@ -214,7 +246,8 @@ export default function YeniTalepScreen() {
             setKategori("");
             setOncelik("");
             setFotolar([]);
-            router.push("/(tabs)/talepler");
+            setAdim(1);
+            router.replace("/(tabs)/talepler");
           },
         },
       ]);
@@ -224,6 +257,249 @@ export default function YeniTalepScreen() {
       setSubmitting(false);
     }
   };
+
+  // Adım göstergesi
+  const renderAdimGostergesi = () => {
+    const adimlar = [
+      { no: 1, label: "BİLGİLER" },
+      { no: 2, label: "KATEGORİ" },
+      { no: 3, label: "GÖNDER" },
+    ];
+
+    return (
+      <View style={styles.stepRow}>
+        {adimlar.map((a, index) => (
+          <View key={a.no} style={{ flexDirection: "row", alignItems: "center" }}>
+            <View style={adim >= a.no ? styles.stepActive : styles.stepInactive}>
+              <Text
+                style={
+                  adim >= a.no ? styles.stepActiveText : styles.stepInactiveText
+                }
+              >
+                {a.label}
+              </Text>
+            </View>
+            {index < adimlar.length - 1 && <View style={styles.stepLine} />}
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  // Adım 1: Temel Bilgiler
+  const renderAdim1 = () => (
+    <>
+      <SectionHeading title="Talep Bilgileri" color={colors.primary} />
+      <View style={styles.formCard}>
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>BAŞLIK</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Ör: Yazıcı arızası"
+            placeholderTextColor={colors.outlineVariant}
+            value={baslik}
+            onChangeText={setBaslik}
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>KONUM</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Ör: İstanbul / Kadıköy Ofis - 3. Kat No: 305"
+            placeholderTextColor={colors.outlineVariant}
+            value={konum}
+            onChangeText={setKonum}
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>AÇIKLAMA</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Arıza detaylarını buraya yazın..."
+            placeholderTextColor={colors.outlineVariant}
+            value={aciklama}
+            onChangeText={setAciklama}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+          />
+        </View>
+      </View>
+    </>
+  );
+
+  // Adım 2: Kategori ve Öncelik
+  const renderAdim2 = () => (
+    <>
+      <SectionHeading
+        title="Kategori"
+        color={colors.tertiaryColor || colors.primary}
+      />
+      <View style={styles.formCard}>
+        <View style={styles.chipGrid}>
+          {kategoriler.map((k) => (
+            <TouchableOpacity
+              key={k}
+              style={[styles.chip, kategori === k && styles.chipActive]}
+              onPress={() => setKategori(k)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  kategori === k && styles.chipTextActive,
+                ]}
+              >
+                {k}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <SectionHeading title="Öncelik" color={colors.outline} />
+      <View style={styles.formCard}>
+        <View style={styles.priorityRow}>
+          {oncelikler.map((o) => (
+            <TouchableOpacity
+              key={o}
+              style={[
+                styles.priorityBtn,
+                {
+                  borderColor: oncelikRengi(o),
+                  backgroundColor:
+                    oncelik === o ? oncelikRengi(o) : "transparent",
+                },
+              ]}
+              onPress={() => setOncelik(o)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.priorityText,
+                  { color: oncelik === o ? "#fff" : oncelikRengi(o) },
+                ]}
+              >
+                {o}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    </>
+  );
+
+  // Adım 3: Fotoğraf + Özet + Gönder
+  const renderAdim3 = () => (
+    <>
+      {/* Fotoğraf */}
+      <SectionHeading
+        title={`Cihaz Görselleri (${fotolar.length}/${MAX_FOTO})`}
+        color={colors.outline}
+      />
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.photoScroll}
+        contentContainerStyle={styles.photoSection}
+      >
+        {fotolar.map((f, i) => (
+          <View key={i} style={styles.photoPreviewWrap}>
+            <Image source={{ uri: f.uri }} style={styles.photoPreview} />
+            <TouchableOpacity
+              style={styles.photoRemoveBtn}
+              onPress={() => fotografSil(i)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="close" size={14} color="#fff" />
+            </TouchableOpacity>
+            <View style={styles.photoBadge}>
+              <Text style={styles.photoBadgeText}>{i + 1}</Text>
+            </View>
+          </View>
+        ))}
+        {fotolar.length < MAX_FOTO && (
+          <TouchableOpacity
+            style={styles.photoAddBtn}
+            onPress={fotografEkle}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="camera-outline"
+              size={28}
+              color={colors.outline}
+            />
+            <Text style={styles.photoAddText}>RESİM EKLE</Text>
+          </TouchableOpacity>
+        )}
+      </ScrollView>
+
+      {/* Özet Kartı */}
+      <SectionHeading title="Talep Özeti" color={colors.primary} />
+      <View style={styles.formCard}>
+        <View style={styles.ozetRow}>
+          <Text style={styles.ozetLabel}>Başlık:</Text>
+          <Text style={styles.ozetValue} numberOfLines={1}>
+            {baslik}
+          </Text>
+        </View>
+        <View style={styles.ozetRow}>
+          <Text style={styles.ozetLabel}>Konum:</Text>
+          <Text style={styles.ozetValue} numberOfLines={1}>
+            {konum}
+          </Text>
+        </View>
+        <View style={styles.ozetRow}>
+          <Text style={styles.ozetLabel}>Açıklama:</Text>
+          <Text style={styles.ozetValue} numberOfLines={2}>
+            {aciklama}
+          </Text>
+        </View>
+        <View style={styles.ozetRow}>
+          <Text style={styles.ozetLabel}>Kategori:</Text>
+          <Text style={styles.ozetValue}>{kategori}</Text>
+        </View>
+        <View style={styles.ozetRow}>
+          <Text style={styles.ozetLabel}>Öncelik:</Text>
+          <Text style={[styles.ozetValue, { color: oncelikRengi(oncelik) }]}>
+            {oncelik}
+          </Text>
+        </View>
+        <View style={styles.ozetRow}>
+          <Text style={styles.ozetLabel}>Fotoğraf:</Text>
+          <Text style={styles.ozetValue}>{fotolar.length} adet</Text>
+        </View>
+      </View>
+
+      {/* Gönder */}
+      <TouchableOpacity
+        style={[styles.submitBtn, submitting && styles.submitBtnDisabled]}
+        onPress={handleSubmit}
+        disabled={submitting}
+        activeOpacity={0.85}
+      >
+        <LinearGradient
+          colors={isDark ? ["#264191", "#1e3a8a"] : ["#00236f", "#1e3a8a"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.submitGradient}
+        >
+          {submitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <Ionicons name="save-outline" size={20} color="#fff" />
+              <Text style={styles.submitBtnText}>
+                Talebi Kaydet ve Gönder
+              </Text>
+            </>
+          )}
+        </LinearGradient>
+      </TouchableOpacity>
+    </>
+  );
 
   return (
     <KeyboardAvoidingView
@@ -235,179 +511,53 @@ export default function YeniTalepScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Başlık */}
-        <SectionHeading title="Talep Bilgileri" color={colors.primary} />
-        <View style={styles.formCard}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>BAŞLIK</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ör: Yazıcı arızası"
-              placeholderTextColor={colors.outlineVariant}
-              value={baslik}
-              onChangeText={setBaslik}
-            />
-          </View>
+        {/* Adım Göstergesi */}
+        {renderAdimGostergesi()}
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>KONUM</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ör: İstanbul / Kadıköy Ofis - 3. Kat No: 305"
-              placeholderTextColor={colors.outlineVariant}
-              value={konum}
-              onChangeText={setKonum}
-            />
-          </View>
+        {/* Adım İçeriği */}
+        {adim === 1 && renderAdim1()}
+        {adim === 2 && renderAdim2()}
+        {adim === 3 && renderAdim3()}
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>AÇIKLAMA</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder="Arıza detaylarını buraya yazın..."
-              placeholderTextColor={colors.outlineVariant}
-              value={aciklama}
-              onChangeText={setAciklama}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-          </View>
-        </View>
-
-        {/* Kategori */}
-        <SectionHeading
-          title="Kategori"
-          color={colors.tertiaryColor || colors.primary}
-        />
-        <View style={styles.formCard}>
-          <View style={styles.chipGrid}>
-            {kategoriler.map((k) => (
-              <TouchableOpacity
-                key={k}
-                style={[styles.chip, kategori === k && styles.chipActive]}
-                onPress={() => setKategori(k)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    kategori === k && styles.chipTextActive,
-                  ]}
-                >
-                  {k}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Öncelik */}
-        <SectionHeading title="Öncelik" color={colors.outline} />
-        <View style={styles.formCard}>
-          <View style={styles.priorityRow}>
-            {oncelikler.map((o) => (
-              <TouchableOpacity
-                key={o}
-                style={[
-                  styles.priorityBtn,
-                  {
-                    borderColor: oncelikRengi(o),
-                    backgroundColor:
-                      oncelik === o ? oncelikRengi(o) : "transparent",
-                  },
-                ]}
-                onPress={() => setOncelik(o)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.priorityText,
-                    { color: oncelik === o ? "#fff" : oncelikRengi(o) },
-                  ]}
-                >
-                  {o}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Fotoğraf */}
-        <SectionHeading
-          title={`Cihaz Görselleri (${fotolar.length}/${MAX_FOTO})`}
-          color={colors.outline}
-        />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.photoScroll}
-          contentContainerStyle={styles.photoSection}
-        >
-          {fotolar.map((f, i) => (
-            <View key={i} style={styles.photoPreviewWrap}>
-              <Image source={{ uri: f.uri }} style={styles.photoPreview} />
-              <TouchableOpacity
-                style={styles.photoRemoveBtn}
-                onPress={() => fotografSil(i)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="close" size={14} color="#fff" />
-              </TouchableOpacity>
-              <View style={styles.photoBadge}>
-                <Text style={styles.photoBadgeText}>{i + 1}</Text>
-              </View>
-            </View>
-          ))}
-          {fotolar.length < MAX_FOTO && (
+        {/* Navigasyon Butonları */}
+        <View style={styles.navRow}>
+          {adim > 1 ? (
             <TouchableOpacity
-              style={styles.photoAddBtn}
-              onPress={fotografEkle}
+              style={styles.navBtnBack}
+              onPress={geriGit}
               activeOpacity={0.7}
             >
               <Ionicons
-                name="camera-outline"
-                size={28}
-                color={colors.outline}
+                name="arrow-back"
+                size={18}
+                color={colors.onSurfaceVariant}
               />
-              <Text style={styles.photoAddText}>RESİM EKLE</Text>
+              <Text style={styles.navBtnBackText}>Geri</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.navBtnBack}
+              onPress={() => router.back()}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.navBtnBackText}>Vazgeç</Text>
             </TouchableOpacity>
           )}
-        </ScrollView>
 
-        {/* Submit */}
-        <TouchableOpacity
-          style={[styles.submitBtn, submitting && styles.submitBtnDisabled]}
-          onPress={handleSubmit}
-          disabled={submitting}
-          activeOpacity={0.85}
-        >
-          <LinearGradient
-            colors={isDark ? ["#264191", "#1e3a8a"] : ["#00236f", "#1e3a8a"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.submitGradient}
-          >
-            {submitting ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Ionicons name="save-outline" size={20} color="#fff" />
-                <Text style={styles.submitBtnText}>
-                  Talebi Kaydet ve Gönder
-                </Text>
-              </>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.cancelBtn}
-          activeOpacity={0.7}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.cancelBtnText}>Vazgeç</Text>
-        </TouchableOpacity>
+          {adim < TOPLAM_ADIM && (
+            <TouchableOpacity
+              style={[
+                styles.navBtnNext,
+                !adimGecerliMi(adim) && styles.navBtnNextDisabled,
+              ]}
+              onPress={ileriGit}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.navBtnNextText}>İleri</Text>
+              <Ionicons name="arrow-forward" size={18} color="#fff" />
+            </TouchableOpacity>
+          )}
+        </View>
 
         <View style={{ height: SPACING.xxl }} />
       </ScrollView>
@@ -454,6 +604,7 @@ const getStyles = (colors, shadows, isDark) =>
     stepRow: {
       flexDirection: "row",
       alignItems: "center",
+      justifyContent: "center",
       gap: SPACING.sm,
       marginBottom: SPACING.sm,
     },
@@ -473,6 +624,7 @@ const getStyles = (colors, shadows, isDark) =>
       width: 24,
       height: 2,
       backgroundColor: colors.outlineVariant,
+      marginHorizontal: SPACING.xs,
     },
     stepInactive: {
       backgroundColor: colors.surfaceContainerHighest,
@@ -613,6 +765,24 @@ const getStyles = (colors, shadows, isDark) =>
       fontWeight: "700",
       color: "#fff",
     },
+    ozetRow: {
+      flexDirection: "row",
+      marginBottom: SPACING.md,
+      alignItems: "flex-start",
+    },
+    ozetLabel: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: colors.outline,
+      width: 80,
+      letterSpacing: 0.3,
+    },
+    ozetValue: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.onSurface,
+    },
     submitBtn: {
       marginTop: SPACING.xl,
       borderRadius: RADIUS.card,
@@ -633,14 +803,41 @@ const getStyles = (colors, shadows, isDark) =>
       fontWeight: "700",
       letterSpacing: -0.2,
     },
-    cancelBtn: {
+    navRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
       alignItems: "center",
-      paddingVertical: SPACING.base,
-      marginTop: SPACING.sm,
+      marginTop: SPACING.xl,
     },
-    cancelBtnText: {
+    navBtnBack: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: SPACING.md,
+      paddingHorizontal: SPACING.lg,
+      gap: SPACING.sm,
+      borderRadius: RADIUS.button,
+      backgroundColor: colors.surfaceContainerHigh,
+    },
+    navBtnBackText: {
       fontSize: 15,
       fontWeight: "600",
-      color: colors.outline,
+      color: colors.onSurfaceVariant,
+    },
+    navBtnNext: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: SPACING.md,
+      paddingHorizontal: SPACING.xl,
+      gap: SPACING.sm,
+      borderRadius: RADIUS.button,
+      backgroundColor: colors.primary,
+    },
+    navBtnNextDisabled: {
+      opacity: 0.5,
+    },
+    navBtnNextText: {
+      fontSize: 15,
+      fontWeight: "700",
+      color: "#fff",
     },
   });

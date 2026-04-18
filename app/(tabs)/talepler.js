@@ -14,8 +14,10 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useAppTheme } from "../../context/ThemeContext";
 import { durumRengi, tarihFormat } from "../../lib/helpers";
+import { cacheVeriGetir, cacheVeriKaydet } from "../../lib/offlineCache";
 import { supabase } from "../../lib/supabase";
 import { RADIUS, SPACING } from "../../lib/theme";
+import { TalepListeSkeleton } from "../../components/SkeletonLoader";
 
 export default function TaleplerScreen() {
   const router = useRouter();
@@ -29,6 +31,16 @@ export default function TaleplerScreen() {
   const [aramaMetni, setAramaMetni] = useState("");
 
   const fetchTalepler = useCallback(async () => {
+    // Önce cache'den oku
+    try {
+      const cachedData = await cacheVeriGetir("talepler");
+      if (cachedData && cachedData.length > 0) {
+        setTalepler(cachedData);
+        setLoading(false);
+      }
+    } catch (_) {}
+
+    // Sonra Supabase'den güncelle
     try {
       const { data, error } = await supabase
         .from("talepler")
@@ -37,6 +49,7 @@ export default function TaleplerScreen() {
 
       if (error) throw error;
       setTalepler(data || []);
+      await cacheVeriKaydet("talepler", data || []);
     } catch (error) {
       console.error("Talepler yuklenemedi:", error.message);
     } finally {
@@ -158,9 +171,7 @@ export default function TaleplerScreen() {
       </View>
 
       {loading ? (
-        <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+        <TalepListeSkeleton />
       ) : (
         <FlatList
           data={filtrelenmis}

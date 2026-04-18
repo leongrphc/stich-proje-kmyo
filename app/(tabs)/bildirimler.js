@@ -11,8 +11,10 @@ import {
   View,
 } from "react-native";
 import GradientCard from "../../components/GradientCard";
+import { BildirimListeSkeleton } from "../../components/SkeletonLoader";
 import { useAppTheme } from "../../context/ThemeContext";
 import { okunduIsaretle, tumunuOkunduYap } from "../../lib/bildirimler";
+import { cacheVeriGetir, cacheVeriKaydet } from "../../lib/offlineCache";
 import { supabase } from "../../lib/supabase";
 import { SPACING } from "../../lib/theme";
 
@@ -36,6 +38,16 @@ export default function BildirimlerScreen() {
   };
 
   const fetchBildirimler = useCallback(async () => {
+    // Önce cache'den oku
+    try {
+      const cachedData = await cacheVeriGetir("bildirimler");
+      if (cachedData && cachedData.length > 0) {
+        setBildirimler(cachedData);
+        setLoading(false);
+      }
+    } catch (_) {}
+
+    // Sonra Supabase'den güncelle
     try {
       const { data, error } = await supabase
         .from("bildirimler")
@@ -44,6 +56,7 @@ export default function BildirimlerScreen() {
         .limit(50);
       if (error) throw error;
       setBildirimler(data || []);
+      await cacheVeriKaydet("bildirimler", data || []);
     } catch (error) {
       console.error("Bildirimler yuklenemedi:", error.message);
     } finally {
@@ -166,9 +179,7 @@ export default function BildirimlerScreen() {
       )}
 
       {loading ? (
-        <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+        <BildirimListeSkeleton />
       ) : (
         <FlatList
           data={bildirimler}

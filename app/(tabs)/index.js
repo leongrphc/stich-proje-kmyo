@@ -17,8 +17,10 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useAppTheme } from "../../context/ThemeContext";
 import { durumRengi } from "../../lib/helpers";
+import { cacheVeriGetir, cacheVeriKaydet } from "../../lib/offlineCache";
 import { supabase } from "../../lib/supabase";
 import { RADIUS, SPACING } from "../../lib/theme";
+import { DashboardSkeleton } from "../../components/SkeletonLoader";
 
 export default function HomeScreen() {
   const { user, profile, fullName, role, isYonetici, isTeknisyen, isKullanici } = useAuth();
@@ -30,9 +32,48 @@ export default function HomeScreen() {
   const [ozet, setOzet] = useState({});
   const [sonTalepler, setSonTalepler] = useState([]);
 
+  const hesaplaOzet = useCallback((t) => {
+    if (isYonetici) {
+      return {
+        toplam: t.length,
+        bekleyen: t.filter((x) => x.durum === "Beklemede").length,
+        aksiyonBekliyor: t.filter((x) => x.durum === "Aksiyon Bekleniyor").length,
+        onayBekliyor: t.filter((x) => x.durum === "Onay Bekliyor").length,
+        devamEden: t.filter((x) => x.durum === "Devam Ediyor" || x.durum === "Atandi").length,
+        tamamlanan: t.filter((x) => x.durum === "Tamamlandi").length,
+      };
+    } else if (isTeknisyen) {
+      return {
+        toplam: t.length,
+        atanan: t.filter((x) => x.durum === "Atandi").length,
+        devamEden: t.filter((x) => x.durum === "Devam Ediyor").length,
+        aksiyonBekliyor: t.filter((x) => x.durum === "Aksiyon Bekleniyor").length,
+        tamamlanan: t.filter((x) => x.durum === "Tamamlandi").length,
+      };
+    } else {
+      return {
+        toplam: t.length,
+        bekleyen: t.filter((x) => x.durum === "Beklemede").length,
+        devamEden: t.filter((x) => x.durum === "Devam Ediyor" || x.durum === "Atandi").length,
+        tamamlanan: t.filter((x) => x.durum === "Tamamlandi").length,
+      };
+    }
+  }, [isYonetici, isTeknisyen]);
+
   const fetchVeriler = useCallback(async () => {
     if (role === null) return;
 
+    // Önce cache'den oku
+    try {
+      const cachedData = await cacheVeriGetir("talepler");
+      if (cachedData && cachedData.length > 0) {
+        setOzet(hesaplaOzet(cachedData));
+        setSonTalepler(cachedData.slice(0, 5));
+        setLoading(false);
+      }
+    } catch (_) {}
+
+    // Sonra Supabase'den güncelle
     try {
       const { data, error } = await supabase
         .from("talepler")
@@ -42,40 +83,16 @@ export default function HomeScreen() {
       if (error) throw error;
       const t = data || [];
 
-      if (isYonetici) {
-        setOzet({
-          toplam: t.length,
-          bekleyen: t.filter((x) => x.durum === "Beklemede").length,
-          aksiyonBekliyor: t.filter((x) => x.durum === "Aksiyon Bekleniyor").length,
-          onayBekliyor: t.filter((x) => x.durum === "Onay Bekliyor").length,
-          devamEden: t.filter((x) => x.durum === "Devam Ediyor" || x.durum === "Atandi").length,
-          tamamlanan: t.filter((x) => x.durum === "Tamamlandi").length,
-        });
-      } else if (isTeknisyen) {
-        setOzet({
-          toplam: t.length,
-          atanan: t.filter((x) => x.durum === "Atandi").length,
-          devamEden: t.filter((x) => x.durum === "Devam Ediyor").length,
-          aksiyonBekliyor: t.filter((x) => x.durum === "Aksiyon Bekleniyor").length,
-          tamamlanan: t.filter((x) => x.durum === "Tamamlandi").length,
-        });
-      } else {
-        setOzet({
-          toplam: t.length,
-          bekleyen: t.filter((x) => x.durum === "Beklemede").length,
-          devamEden: t.filter((x) => x.durum === "Devam Ediyor" || x.durum === "Atandi").length,
-          tamamlanan: t.filter((x) => x.durum === "Tamamlandi").length,
-        });
-      }
-
+      setOzet(hesaplaOzet(t));
       setSonTalepler(t.slice(0, 5));
+      await cacheVeriKaydet("talepler", t);
     } catch (error) {
       console.error("Veriler yuklenemedi:", error.message);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [role, isTeknisyen, isYonetici]);
+  }, [role, isTeknisyen, isYonetici, hesaplaOzet]);
 
   useFocusEffect(
     useCallback(() => {
@@ -120,8 +137,8 @@ export default function HomeScreen() {
 
   if (loading || role === null) {
     return (
-      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={styles.container}>
+        <DashboardSkeleton />
       </View>
     );
   }
